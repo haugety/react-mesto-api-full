@@ -1,0 +1,37 @@
+{
+  "name": "react-mesto-api-full",
+  "version": "1.0.0",
+  "description": "Репозиторий для полноценного API проекта Mesto, включающий авторизацию и регистрацию пользователей, операции с карточками и пользователями.   Пожалуйста, прикрепите в это описание ссылку на репозиторий с готовым React-приложением, использующим этот API и ссылку на сайт, размещенный на Яндекс.Облаке.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Haugety/react-mesto-api-full.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Haugety/react-mesto-api-full/issues"
+  },
+  "homepage": "https://github.com/Haugety/react-mesto-api-full#readme",
+  "devDependencies": {
+    "eslint": "^7.12.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "nodemon": "^2.0.6"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-rate-limit": "^5.1.3",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^5.10.10",
+    "validator": "^13.1.17"
+  }
+}
