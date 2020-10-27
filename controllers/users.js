@@ -1,56 +1,44 @@
 const { NODE_ENV, JWT_SECRET } = process.env;
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-
+const NotFoundError = require('../errors/not-found-err');
+const UnauthorizedError = require('../errors/unauthorized-error');
+const ConflictingRequestError = require('../errors/conflicting-request-err');
 const User = require('../models/user');
-const {
-  internalServerError,
-  httpOk,
-  notFound,
-  badRequest,
-} = require('../helpers/status-handlers');
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
+      if (!user) {
+        throw new UnauthorizedError('Необходима авторизация');
+      }
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res.send({ token });
+      res.status(200).send({ token });
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const getUsers = (req, res) => User.find({})
+const getUsers = (req, res, next) => User.find({})
   .then((data) => {
     if (!data) {
-      notFound(res, 'Запрашиваемые данные отсутствуют');
-      return;
+      throw new NotFoundError('Запрашиваемые данные отсутствуют');
     }
-    httpOk(res, data);
+    res.status(200).send(data);
   })
-  .catch(() => internalServerError(res));
+  .catch(next);
 
-const getUserById = (req, res) => User.findOne({ _id: req.params._id })
-  .orFail(new Error('NotValidId'))
-  .then((user) => httpOk(res, user))
-  .catch((err) => {
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данного пользователя нет в базе');
-    } else {
-      internalServerError(res);
-    }
-  });
+const getUserById = (req, res, next) => User.findOne({ _id: req.user._id })
+  .orFail(new NotFoundError('Данного пользователя нет в базе'))
+  .then((user) => res.status(200).send(user))
+  .catch(next);
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   bcrypt.hash(req.body.password, 10)
     .then((hash) => User.create({
       email: req.body.email,
@@ -59,49 +47,32 @@ const createUser = (req, res) => {
       about: req.body.about,
       avatar: req.body.avatar,
     }))
-    .then(() => httpOk(res, { message: 'Вы успешно зарегистрировались!' }))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        badRequest(res);
-      } else {
-        internalServerError(res);
+      if (err.name === 'MongoError' || err.code === 11000) {
+        throw new ConflictingRequestError('Пользователь с таким email уже зарегистрирован');
       }
-    });
+    })
+    .then(() => res.status(200).send({ message: 'Вы успешно зарегистрировались!' }))
+    .catch(next);
 };
 
-const updateUser = (req, res) => User.findByIdAndUpdate(
+const updateUser = (req, res, next) => User.findByIdAndUpdate(
   req.user._id,
   { name: req.body.name, about: req.body.about },
   { new: true, runValidators: true },
 )
-  .orFail(new Error('NotValidId'))
-  .then((user) => httpOk(res, user))
-  .catch((err) => {
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данного пользователя нет в базе');
-    } else if (err.name === 'ValidationError') {
-      badRequest(res);
-    } else {
-      internalServerError(res);
-    }
-  });
+  .orFail(new NotFoundError('Данного пользователя нет в базе'))
+  .then((user) => res.status(200).send(user))
+  .catch(next);
 
-const updateAvatar = (req, res) => User.findByIdAndUpdate(
+const updateAvatar = (req, res, next) => User.findByIdAndUpdate(
   req.user._id,
   { avatar: req.body.avatar },
   { new: true, runValidators: true },
 )
-  .orFail(new Error('NotValidId'))
-  .then((user) => httpOk(res, user))
-  .catch((err) => {
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данного пользователя нет в базе');
-    } else if (err.name === 'ValidationError') {
-      badRequest(res);
-    } else {
-      internalServerError(res);
-    }
-  });
+  .orFail(new NotFoundError('Данного пользователя нет в базе'))
+  .then((user) => res.status(200).send(user))
+  .catch(next);
 
 module.exports = {
   getUsers,

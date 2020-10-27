@@ -1,73 +1,46 @@
 const Card = require('../models/card');
-const {
-  internalServerError,
-  httpOk,
-  notFound,
-  badRequest,
-} = require('../helpers/status-handlers');
+const NotFoundError = require('../errors/not-found-err');
 
-const getCards = (req, res) => Card.find({})
+const getCards = (req, res, next) => Card.find({})
   .then((data) => {
     if (!data) {
-      notFound(res, 'Запрашиваемые данные отсутствуют');
-      return;
+      throw new NotFoundError('Запрашиваемые данные отсутствуют');
     }
-    httpOk(res, data);
+    res.status(200).send(data.reverse());
   })
-  .catch((err) => console.log(err));
+  .catch(next);
 
-const createCard = (req, res) => Card.create({ owner: req.user._id, ...req.body })
-  .then((card) => httpOk(res, card))
-  .catch((err) => {
-    if (err.name === 'ValidationError') {
-      badRequest(res);
-    } else {
-      internalServerError(res);
+const createCard = (req, res, next) => Card.create({ owner: req.user._id, ...req.body })
+  .then((card) => res.status(200).send(card))
+  .catch(next);
+
+const removeCard = (req, res, next) => Card.findById(req.params._id)
+  .orFail(new NotFoundError('Данной карточки нет в базе'))
+  .then((card) => {
+    if (req.user._id.toString() === card.owner.toString()) {
+      card.remove();
+      res.status(200).send(card);
     }
-  });
+  })
+  .catch(next);
 
-const removeCard = (req, res) => Card.findByIdAndRemove(req.params._id)
-  .orFail(new Error('NotValidId'))
-  .then((card) => httpOk(res, card))
-  .catch((err) => {
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данной карточки нет в базе');
-    } else {
-      internalServerError(res);
-    }
-  });
-
-const putLike = (req, res) => Card.findByIdAndUpdate(
+const putLike = (req, res, next) => Card.findByIdAndUpdate(
   req.params._id,
   { $addToSet: { likes: req.user._id } },
   { new: true },
 )
-  .orFail(new Error('NotValidId'))
-  .then((card) => httpOk(res, card))
-  .catch((err) => {
-    console.log(err);
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данной карточки нет в базе');
-    } else {
-      internalServerError(res);
-    }
-  });
+  .orFail(new NotFoundError('Данной карточки нет в базе'))
+  .then((card) => res.status(200).send(card))
+  .catch(next);
 
-const removeLike = (req, res) => Card.findByIdAndUpdate(
+const removeLike = (req, res, next) => Card.findByIdAndUpdate(
   req.params._id,
   { $pull: { likes: req.user._id } },
   { new: true },
 )
-  .orFail(new Error('NotValidId'))
-  .then((card) => httpOk(res, card))
-  .catch((err) => {
-    console.log(err);
-    if (err.name === 'CastError' || err.message === 'NotValidId') {
-      notFound(res, 'Данной карточки нет в базе');
-    } else {
-      internalServerError(res);
-    }
-  });
+  .orFail(new NotFoundError('Данной карточки нет в базе'))
+  .then((card) => res.status(200).send(card))
+  .catch(next);
 
 module.exports = {
   getCards,

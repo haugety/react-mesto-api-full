@@ -1,21 +1,23 @@
 const router = require('express').Router();
+const { validateUpdateUser, validateUpdateAvatar } = require('../middlewares/requestValidation');
+
 const {
   getUsers,
   getUserById,
   updateUser,
   updateAvatar,
 } = require('../controllers/users');
-const { notFound } = require('../helpers/status-handlers');
+const NotFoundError = require('../errors/not-found-err');
 
 router.get(
   '/users/:_id/:char',
-  (req, res) => {
-    notFound(res);
+  (req, res, next) => {
+    next(new NotFoundError('Запрашиваемые данные отсутствуют'));
   },
 );
 
 router.get(
-  '/users/:_id',
+  '/users/me',
   getUserById,
 );
 
@@ -26,11 +28,13 @@ router.get(
 
 router.patch(
   '/users/me/avatar',
+  validateUpdateAvatar,
   updateAvatar,
 );
 
 router.patch(
   '/users/me',
+  validateUpdateUser,
   updateUser,
 );
 
