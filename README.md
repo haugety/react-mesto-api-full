@@ -1,3 +1,8 @@
-# react-mesto-api-full
-Репозиторий для полноценного API проекта Mesto, включающий авторизацию и регистрацию пользователей, операции с карточками и пользователями.  
-Пожалуйста, прикрепите в это описание ссылку на репозиторий с готовым React-приложением, использующим этот API и ссылку на сайт, размещенный на Яндекс.Облаке.
+# Проект Mesto (backend)
+
+**Публичный IP:** 84.201.151.38
+
+**Домен backend:** api.hgs.students.nomoreparties.space
+
+**Домен frontend:** hgs.students.nomoreparties.space
+**Репозиторий frontend:** https://github.com/Haugety/react-mesto-auth
