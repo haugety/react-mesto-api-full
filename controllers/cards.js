@@ -1,5 +1,6 @@
 const Card = require('../models/card');
 const NotFoundError = require('../errors/not-found-err');
+const ForbiddenError = require('../errors/forbidden-err');
 
 const getCards = (req, res, next) => Card.find({})
   .then((data) => {
@@ -10,7 +11,11 @@ const getCards = (req, res, next) => Card.find({})
   })
   .catch(next);
 
-const createCard = (req, res, next) => Card.create({ owner: req.user._id, ...req.body })
+const createCard = (req, res, next) => Card.create({
+  owner: req.user._id,
+  name: req.body.name,
+  link: req.body.link,
+})
   .then((card) => res.status(200).send(card))
   .catch(next);
 
@@ -20,6 +25,8 @@ const removeCard = (req, res, next) => Card.findById(req.params._id)
     if (req.user._id.toString() === card.owner.toString()) {
       card.remove();
       res.status(200).send(card);
+    } else {
+      throw new ForbiddenError('Доступ запрещен');
     }
   })
   .catch(next);

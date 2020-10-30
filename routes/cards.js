@@ -6,15 +6,7 @@ const {
   putLike,
   removeLike,
 } = require('../controllers/cards');
-const NotFoundError = require('../errors/not-found-err');
 const { validateCreateCard, validateRemoveCard, validateLikeOnCard } = require('../middlewares/requestValidation');
-
-router.get(
-  '/cards/:char',
-  (req, res, next) => {
-    next(new NotFoundError('Запрашиваемые данные отсутствуют'));
-  },
-);
 
 router.delete(
   '/cards/:_id',

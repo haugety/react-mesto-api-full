@@ -1,6 +1,13 @@
 const { celebrate, Joi } = require('celebrate');
 const { isURL } = require('validator');
 
+const validateLogin = celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required().min(6),
+  }),
+});
+
 const validateCreateUser = celebrate({
   body: Joi.object().keys({
     email: Joi.string().required().email(),
@@ -11,7 +18,7 @@ const validateCreateUser = celebrate({
 const validateUpdateUser = celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    about: Joi.string().min(2).max(30),
+    about: Joi.string().required().min(2).max(30),
   }),
 });
 
@@ -19,7 +26,7 @@ const validateUpdateAvatar = celebrate({
   body: Joi.object().keys({
     avatar: Joi.string().required().custom((value, helpers) => {
       if (!isURL(value)) {
-        return helpers.error('Невалидная ссылка');
+        return helpers.error('any.invalid');
       }
       return value;
     }),
@@ -37,7 +44,7 @@ const validateCreateCard = celebrate({
     name: Joi.string().required().min(2).max(30),
     link: Joi.string().required().custom((value, helpers) => {
       if (!isURL(value)) {
-        return helpers.error('Невалидная ссылка');
+        return helpers.error('any.invalid');
       }
       return value;
     }),
@@ -51,6 +58,7 @@ const validateLikeOnCard = celebrate({
 });
 
 module.exports = {
+  validateLogin,
   validateCreateUser,
   validateUpdateUser,
   validateUpdateAvatar,

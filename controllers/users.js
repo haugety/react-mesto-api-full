@@ -9,17 +9,29 @@ const User = require('../models/user');
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
-  return User.findUserByCredentials(email, password)
+  User.findOne({ email }).select('+password')
     .then((user) => {
       if (!user) {
-        throw new UnauthorizedError('Необходима авторизация');
+        throw new UnauthorizedError('Неправильные почта или пароль');
       }
+      return bcrypt.compare(password, user.password)
+        .then((matched) => {
+          if (!matched) {
+            return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
+          }
+          return user;
+        });
+    })
+    .then((user) => {
       const token = jwt.sign(
         { _id: user._id },
         NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
         { expiresIn: '7d' },
       );
-      res.status(200).send({ token });
+      if (!token) {
+        throw new UnauthorizedError('Токен не найден');
+      }
+      return res.status(200).send({ token });
     })
     .catch(next);
 };
@@ -33,7 +45,15 @@ const getUsers = (req, res, next) => User.find({})
   })
   .catch(next);
 
-const getUserById = (req, res, next) => User.findOne({ _id: req.user._id })
+const getUser = (req, res, next) => {
+  console.log(req);
+  User.findOne({ _id: req.user._id })
+    .orFail(new NotFoundError('Данного пользователя нет в базе'))
+    .then((user) => res.status(200).send(user))
+    .catch(next);
+};
+
+const getUserById = (req, res, next) => User.findOne({ _id: req.params._id })
   .orFail(new NotFoundError('Данного пользователя нет в базе'))
   .then((user) => res.status(200).send(user))
   .catch(next);
@@ -51,6 +71,8 @@ const createUser = (req, res, next) => {
       if (err.name === 'MongoError' || err.code === 11000) {
         throw new ConflictingRequestError('Пользователь с таким email уже зарегистрирован');
       }
+
+      next(err);
     })
     .then(() => res.status(200).send({ message: 'Вы успешно зарегистрировались!' }))
     .catch(next);
@@ -76,6 +98,7 @@ const updateAvatar = (req, res, next) => User.findByIdAndUpdate(
 
 module.exports = {
   getUsers,
+  getUser,
   getUserById,
   login,
   createUser,

@@ -3,6 +3,7 @@ const { validateUpdateUser, validateUpdateAvatar } = require('../middlewares/req
 
 const {
   getUsers,
+  getUser,
   getUserById,
   updateUser,
   updateAvatar,
@@ -18,6 +19,11 @@ router.get(
 
 router.get(
   '/users/me',
+  getUser,
+);
+
+router.get(
+  '/users/:_id',
   getUserById,
 );
 

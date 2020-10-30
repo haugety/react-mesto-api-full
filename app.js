@@ -11,7 +11,7 @@ const { cardRouter } = require('./routes/cards');
 const NotFoundError = require('./errors/not-found-err');
 const { login, createUser } = require('./controllers/users');
 const auth = require('./middlewares/auth');
-const { validateCreateUser } = require('./middlewares/requestValidation');
+const { validateLogin, validateCreateUser } = require('./middlewares/requestValidation');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 const { PORT = 3000 } = process.env;
@@ -39,7 +39,7 @@ app.get('/crash-test', () => {
 //
 // ///////////////////
 
-app.post('/signin', login);
+app.post('/signin', validateLogin, login);
 app.post('/signup', validateCreateUser, createUser);
 
 app.use(auth);
@@ -55,8 +55,8 @@ app.use(errorLogger);
 
 app.use(errors());
 
-app.use((err, req, res) => {
-  console.log(err);
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
   res
