@@ -46,7 +46,6 @@ const getUsers = (req, res, next) => User.find({})
   .catch(next);
 
 const getUser = (req, res, next) => {
-  console.log(req);
   User.findOne({ _id: req.user._id })
     .orFail(new NotFoundError('Данного пользователя нет в базе'))
     .then((user) => res.status(200).send(user))
